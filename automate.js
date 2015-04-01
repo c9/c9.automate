@@ -50,6 +50,8 @@ define(function(require, exports, module) {
             
             var tasks = [];
             var executing = false;
+            var aborting = false;
+            var currentCommand;
             
             function task(task, options, validate) {
                 if (executing) throw new Error("Adding tasks while executing");
@@ -86,7 +88,6 @@ define(function(require, exports, module) {
                         return execute(task, next, options);
                     
                     // Loop over all competing tasks
-                    var found = false;
                     async.eachSeries(Object.keys(task), function(type, next) {
                         var command = getCommand(ns, type);
                         command.isAvailable(function(available){
@@ -97,6 +98,9 @@ define(function(require, exports, module) {
                             
                             // Loop over each of the tasks for this command
                             async.eachSeries(items, function(item, next){
+                                if (aborting)
+                                    return next(new Error("Aborted"));
+                                
                                 emit("each", {
                                     session: session,
                                     task: task, 
@@ -106,6 +110,8 @@ define(function(require, exports, module) {
                                 });
                                 
                                 command.execute(item, options, function(chunk, process){
+                                    if (aborting) return process && process.end();
+                                    
                                     emit("data", { data: chunk, process: process });
                                 }, function(err){
                                     next(err);
@@ -136,6 +142,7 @@ define(function(require, exports, module) {
             function run(callback) {
                 emit("run");
                 
+                aborting = false;
                 executing = true;
                 execute(tasks, function(err){
                     executing = false;
@@ -147,7 +154,11 @@ define(function(require, exports, module) {
             }
             
             function abort(callback){
-                emit("stop", new Error("User Cancelled"));
+                aborting = true;
+                
+                if (!executing)
+                    emit("stop", new Error("Aborted"));
+                
                 callback && callback();
             }
             
