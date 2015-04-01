@@ -91,7 +91,13 @@ define(function(require, exports, module) {
                         var s = type.split(":");
                         if (s.length > 1)
                             s = { ns: s[0], type: s[1] };
-                            
+                        
+                        if (type == "install") {
+                            return execute(task[type], function(err){
+                                next(err || 1);
+                            }, options);
+                        }
+                        
                         var command = getCommand(s.ns || ns, s.type || type);
                         command.isAvailable(function(available){
                             if (!available) return next();
