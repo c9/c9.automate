@@ -51,7 +51,6 @@ define(function(require, exports, module) {
             var tasks = [];
             var executing = false;
             var aborting = false;
-            var currentCommand;
             
             function task(task, options, validate) {
                 if (executing) throw new Error("Adding tasks while executing");
@@ -89,7 +88,11 @@ define(function(require, exports, module) {
                     
                     // Loop over all competing tasks
                     async.eachSeries(Object.keys(task), function(type, next) {
-                        var command = getCommand(ns, type);
+                        var s = type.split(":");
+                        if (s.length > 1)
+                            s = { ns: s[0], type: s[1] };
+                            
+                        var command = getCommand(s.ns || ns, s.type || type);
                         command.isAvailable(function(available){
                             if (!available) return next();
                             
