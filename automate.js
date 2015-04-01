@@ -108,23 +108,24 @@ define(function(require, exports, module) {
                                 command.execute(item, options, function(chunk, process){
                                     emit("data", { data: chunk, process: process });
                                 }, function(err){
-                                    if (!err) found = true;
-                                    
                                     next(err);
                                 });
                             }, function(err){
-                                next(err);
+                                next(err || 1);
                             });
                         });
                     }, function(err){
+                        // Success
+                        if (err === 1) return next();
+                        
+                        // Failure
                         if (err) return next(err);
-                        if (!found) {
-                            err = new Error("None of the available commands are available: " 
-                                + JSON.stringify(task, 4, "   "));
-                            err.code = "ENOTAVAILABLE";
-                            return next(err);
-                        }
-                        next();
+                        
+                        // No command avialable
+                        err = new Error("None of the available commands are available: " 
+                            + JSON.stringify(task, 4, "   "));
+                        err.code = "ENOTAVAILABLE";
+                        return next(err);
                     });
                     
                 }, function(err){
