@@ -49,6 +49,8 @@ define(function(require, exports, module) {
             var emit = session.getEmitter();
             
             var tasks = [];
+            var output = "";
+            var lastProcess;
             var executing = false;
             var aborting = false;
             
@@ -71,13 +73,12 @@ define(function(require, exports, module) {
             }
             
             function execute(tasks, callback, options) {
-                if (!options)
+                if (tasks.$options)
                     options = tasks.$options;
                 
                 // Loop over all tasks or sub-tasks when called recursively
                 async.eachSeries(tasks, function(task, next) {
-                    if (!options)
-                        options = task.$options || {};
+                    options = task.$options || options || {};
                     
                     if (options.ignore) 
                         return next();
@@ -121,6 +122,8 @@ define(function(require, exports, module) {
                                 command.execute(item, options, function(chunk, process){
                                     if (aborting) return process && process.end();
                                     
+                                    output += chunk;
+                                    lastProcess = process;
                                     emit("data", { data: chunk, process: process });
                                 }, function(err){
                                     next(err);
@@ -149,12 +152,16 @@ define(function(require, exports, module) {
             }
             
             function run(callback) {
+                if (executing) return;
+                
                 emit("run");
                 
                 aborting = false;
                 executing = true;
                 execute(tasks, function(err){
                     executing = false;
+                    lastProcess = null;
+                    
                     callback && callback.apply(this, arguments);
                     session.unload();
                     
@@ -165,8 +172,10 @@ define(function(require, exports, module) {
             function abort(callback){
                 aborting = true;
                 
-                if (!executing)
+                if (!executing) {
+                    lastProcess = null;
                     emit("stop", new Error("Aborted"));
+                }
                 
                 callback && callback();
             }
@@ -187,6 +196,16 @@ define(function(require, exports, module) {
                  * 
                  */
                 get executing(){ return executing; },
+                
+                /**
+                 * 
+                 */
+                get output(){ return output; },
+                
+                /**
+                 * 
+                 */
+                get process(){ return lastProcess || null; },
                 
                 /**
                  * 
