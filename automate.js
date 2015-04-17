@@ -119,15 +119,24 @@ define(function(require, exports, module) {
                                     item: item
                                 });
                                 
-                                command.execute(item, options, function(chunk, process){
+                                var onData = function(chunk, process){
                                     if (aborting) return process && process.end();
                                     
                                     output += chunk;
                                     lastProcess = process;
                                     emit("data", { data: chunk, process: process });
-                                }, function(err){
+                                };
+                                
+                                var onFinish = function(err){
+                                    if (err && err.code == "EDISCONNECT") {
+                                        command.execute(item, options, onData, onFinish);
+                                        return;
+                                    }
+                                    
                                     next(err);
-                                });
+                                };
+                                
+                                command.execute(item, options, onData, onFinish);
                             }, function(err){
                                 next(err || 1);
                             });
