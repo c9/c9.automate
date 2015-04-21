@@ -1,10 +1,11 @@
 define(function(require, exports, module) {
-    main.consumes = ["Plugin"];
+    main.consumes = ["Plugin", "c9"];
     main.provides = ["automate"];
     return main;
 
     function main(options, imports, register) {
         var Plugin = imports.Plugin;
+        var c9 = imports.c9;
         
         var async = require("async");
         
@@ -129,7 +130,9 @@ define(function(require, exports, module) {
                                 
                                 var onFinish = function(err){
                                     if (err && err.code == "EDISCONNECT") {
-                                        command.execute(item, options, onData, onFinish);
+                                        c9.once("connect", function(){
+                                            command.execute(item, options, onData, onFinish);
+                                        });
                                         return;
                                     }
                                     
