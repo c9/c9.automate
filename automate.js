@@ -52,6 +52,7 @@ define(function(require, exports, module) {
             var tasks = [];
             var output = "";
             var lastProcess;
+            var lastTask;
             var executing = false;
             var aborting = false;
             
@@ -119,6 +120,8 @@ define(function(require, exports, module) {
                                     type: type, 
                                     item: item
                                 });
+                                
+                                lastTask = task;
                                 
                                 var onData = function(chunk, process){
                                     if (aborting) return process && process.end();
@@ -218,6 +221,11 @@ define(function(require, exports, module) {
                  * 
                  */
                 get process(){ return lastProcess || null; },
+                
+                /**
+                 * 
+                 */
+                get lastTask(){ return lastTask || null; },
                 
                 /**
                  * 
