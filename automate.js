@@ -133,9 +133,9 @@ define(function(require, exports, module) {
                                 
                                 var onFinish = function(err){
                                     if (err && err.code == "EDISCONNECT") {
-                                        setTimeout(function(){
+                                        c9.once("connect", function(){
                                             command.execute(item, options, onData, onFinish);
-                                        }, 100);
+                                        });
                                         return;
                                     }
                                     
