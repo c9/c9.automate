@@ -19,19 +19,19 @@ define(function(require, exports, module) {
         /***** Methods *****/
         
         function addCommand(ns, name, implementation) {
-            if (!namespaces[ns]) namespaces[ns] = { commands: {}, alias: {} };
+            if (!namespaces[ns]) namespaces[ns] = { commands: {}, alias: {}};
             
             namespaces[ns].commands[name] = implementation;
         }
         
         function removeCommand(ns, name) {
-            if (!namespaces[ns]) namespaces[ns] = { commands: {}, alias: {} };
+            if (!namespaces[ns]) namespaces[ns] = { commands: {}, alias: {}};
             
             delete namespaces[ns].commands[name];
         }
         
         function addCommandAlias(ns, name) {
-            if (!namespaces[ns]) namespaces[ns] = { commands: {}, alias: {} };
+            if (!namespaces[ns]) namespaces[ns] = { commands: {}, alias: {}};
             
             for (var i = 1; i < arguments.length; i++) {
                 namespaces[ns].alias[arguments[i]] = name;
@@ -96,20 +96,20 @@ define(function(require, exports, module) {
                             s = { ns: s[0], type: s[1] };
                         
                         if (type == "install") {
-                            return execute(task[type], function(err){
+                            return execute(task[type], function(err) {
                                 next(err || 1);
                             }, options);
                         }
                         
                         var command = getCommand(s.ns || ns, s.type || type);
-                        command.isAvailable(function(available){
+                        command.isAvailable(function(available) {
                             if (!available) return next();
                             
                             var items = Array.isArray(task[type]) 
                                 ? task[type] : [task[type]];
                             
                             // Loop over each of the tasks for this command
-                            async.eachSeries(items, function(item, next){
+                            async.eachSeries(items, function(item, next) {
                                 if (aborting)
                                     return next(new Error("Aborted"));
                                 
@@ -123,7 +123,7 @@ define(function(require, exports, module) {
                                 
                                 lastTask = task;
                                 
-                                var onData = function(chunk, process){
+                                var onData = function(chunk, process) {
                                     if (aborting) return process && process.end();
                                     
                                     output += chunk;
@@ -131,9 +131,9 @@ define(function(require, exports, module) {
                                     emit("data", { data: chunk, process: process });
                                 };
                                 
-                                var onFinish = function(err){
+                                var onFinish = function(err) {
                                     if (err && err.code == "EDISCONNECT") {
-                                        c9.once("connect", function(){
+                                        c9.once("connect", function() {
                                             command.execute(item, options, onData, onFinish);
                                         });
                                         return;
@@ -143,11 +143,11 @@ define(function(require, exports, module) {
                                 };
                                 
                                 command.execute(item, options, onData, onFinish);
-                            }, function(err){
+                            }, function(err) {
                                 next(err || 1);
                             });
                         });
-                    }, function(err){
+                    }, function(err) {
                         // Success
                         if (err === 1) return next();
                         
@@ -161,7 +161,7 @@ define(function(require, exports, module) {
                         return next(err);
                     });
                     
-                }, function(err){
+                }, function(err) {
                     callback(err);
                 });
             }
@@ -173,7 +173,7 @@ define(function(require, exports, module) {
                 
                 aborting = false;
                 executing = true;
-                execute(tasks, function(err){
+                execute(tasks, function(err) {
                     executing = false;
                     lastProcess = null;
                     
@@ -184,7 +184,7 @@ define(function(require, exports, module) {
                 });
             }
             
-            function abort(callback){
+            function abort(callback) {
                 aborting = true;
                 
                 if (!executing) {
@@ -205,27 +205,27 @@ define(function(require, exports, module) {
                 /**
                  * 
                  */
-                get tasks(){ return tasks; },
+                get tasks() { return tasks; },
                 
                 /**
                  * 
                  */
-                get executing(){ return executing; },
+                get executing() { return executing; },
                 
                 /**
                  * 
                  */
-                get output(){ return output; },
+                get output() { return output; },
                 
                 /**
                  * 
                  */
-                get process(){ return lastProcess || null; },
+                get process() { return lastProcess || null; },
                 
                 /**
                  * 
                  */
-                get lastTask(){ return lastTask || null; },
+                get lastTask() { return lastTask || null; },
                 
                 /**
                  * 
